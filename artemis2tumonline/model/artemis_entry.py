@@ -12,3 +12,4 @@ class ArtemisEntry(object):
     matriculation_number: str
     overall_grade: str
     submitted: bool
+    login: str
