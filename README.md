@@ -23,8 +23,16 @@ Usage: artemis2tumonline [OPTIONS]
 
 Options:
   -t, --tumonline_registration_file FILE
-  -a, --artemis_export_file FILE
-  -o, --output_file FILE          [default: /path/to/cwd/tumonline.csv]
+                                  The registration file. You can get this file
+                                  from TUMOnline. Usually, this is the same
+                                  file you use to register the students for
+                                  the exam.
+  -a, --artemis_export_file FILE  The CSV file you can download from Artemis.
+  -o, --output_file FILE          The resulting CSV file. This file contains
+                                  the necessary information from the TUMOnline
+                                  Registration file and the grades from the
+                                  Artemis export. You can upload this file to
+                                  TUM Online.  [default: /path/to/cwd/tumonline.csv]
   --install-completion [bash|zsh|fish|powershell|pwsh]
                                   Install completion for the specified shell.
   --show-completion [bash|zsh|fish|powershell|pwsh]
