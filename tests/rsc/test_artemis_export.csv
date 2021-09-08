@@ -1,0 +1,4 @@
+﻿Name;Login;E-Mail;Matriculation Number;Overall Grade;Submitted;Passed
+"Test1 Name";"test1";"";"1";"1.0";"yes";"yes"
+"Test2 Name";"test2";"";"12";"5.0";"yes";"no"
+"Test3 Name";"test3";"";"123";"5.0";"no";"no"
