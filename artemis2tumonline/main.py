@@ -60,7 +60,8 @@ def artemis2tumonline(
     with output_file.open('w') as f_write:
         writer = DictWriter(f_write,
                             ["registration_number", "number_of_the_course", "date_of_assessment", "grade", "remark",
-                             "ects_grade", "db_primary_key_of_candidate", "db_primary_key_of_exam"], delimiter=";")
+                             "ects_grade", "db_primary_key_of_candidate", "db_primary_key_of_exam"], delimiter=";",
+                            lineterminator='\n')  # PS:Only \n is a valid terminator, not \r\n...
         writer.writeheader()
         for e in entries_with_grades:
             writer.writerow(asdict(e))
