@@ -45,6 +45,12 @@ class BasicTest(TestCase):
 
         self.assertTrue(self.output_file.exists(), msg="There was no CSV file created.")
         with self.output_file.open() as f_read:
+            lines = f_read.readlines()
+            for line in lines:
+                self.assertTrue(line.endswith('\n'))
+                self.assertFalse(line.endswith('\r\n'))
+
+        with self.output_file.open() as f_read:
             reader = DictReader(f_read, delimiter=";")
             entries = list(reader)
         self.assertEqual(entries[0]["registration_number"], "123")
