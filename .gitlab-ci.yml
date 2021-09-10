@@ -1,0 +1,85 @@
+
+stages:
+- pre-analysis
+- build
+- test
+- deploy
+
+include:
+    -   template: Dependency-Scanning.gitlab-ci.yml
+    -   template: License-Scanning.gitlab-ci.yml
+    -   template: Secret-Detection.gitlab-ci.yml
+
+python:quality:
+    artifacts:
+        reports:
+            codequality: flake8.json
+            cobertura: cobertura.xml
+            junit: mypy.xml
+        expire_in: 10 days
+    cache: &python-cache
+        key: ${CI_COMMIT_REF_SLUG}
+        paths:
+            - ".venv"
+    coverage: '/line-rate="0.([0-9]{1,2})\d*"/'
+    image: gitlab.lrz.de:5005/i4/software/docker-images/python3.9-poetry
+    needs: [ ]
+    rules: &python-rules
+        -   changes:
+                - "artemis2tumonline/**.py"
+                - .gitlab-ci.yml
+        -   if: '$CI_COMMIT_BRANCH == "main"'
+        -   if: '$CI_COMMIT_BRANCH == "development"'
+    script:
+        - poetry install
+        - poetry run flake8 --exit-zero --format gl-codeclimate --output-file flake8.json artemis2tumonline
+        - poetry run mypy --cobertura-xml-report=. --junit-xml=mypy.xml --pretty artemis2tumonline
+        - head -n 1 cobertura.xml
+    stage: pre-analysis
+
+python:build:
+    artifacts:
+        paths:
+            - dist
+        expire_in: 3 days
+    cache: *python-cache
+    image: gitlab.lrz.de:5005/i4/software/docker-images/python3.9-poetry
+    needs:
+        - python:quality
+    rules: *python-rules
+    script:
+        - poetry install --no-dev
+        - poetry build
+    stage: build
+
+python:test:
+    artifacts:
+        reports:
+            cobertura: coverage.xml
+            junit: report.xml
+        expire_in: 10 days
+    cache: *python-cache
+    coverage: '/line-rate="0.([0-9]{1,2})\d*"/'
+    image: gitlab.lrz.de:5005/i4/software/docker-images/python3.9-poetry
+    needs:
+        - python:build
+    rules: *python-rules
+    script:
+        - poetry install
+        - poetry run pytest --junitxml report.xml --cov=artemis2tumonline --cov-report xml ./tests
+        - head -n 2 coverage.xml >> t.txt
+        - tail -n 1 t.txt >> s.txt
+        - cat s.txt
+    stage: test
+
+python:deploy:
+    cache: *python-cache
+    image: gitlab.lrz.de:5005/i4/software/docker-images/python3.9-poetry
+    rules:
+        -   if: '$CI_COMMIT_BRANCH == "main"'
+    script:
+        - poetry config repositories.lrz https://gitlab.lrz.de/api/v4/projects/${PROJECT_ID}/packages/pypi
+        - poetry publish --repository lrz --username ${REGISTRY_USERNAME} --password ${REGISTRY_PASSWORD}
+    stage: deploy
+    needs:
+        - python:build

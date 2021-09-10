@@ -1,0 +1,33 @@
+# Eclipse/Java
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*.class
+# Xtext
+src-gen/
+**/model/generated/
+.antlr-generator-*-patch.jar
+# EMF
+model-gen/
+# Xtend
+xtend-gen/
+*._trace
+*.xtendbin
+# Maven
+target/
+# Custom
+EvaluationData
+.DS_Store
+__pycache__
+.idea
+.vscode
+test/
+.coverage
+cobertura.xml
+coverage.xml
+flake8.json
+mypy.xml
+report.xml
