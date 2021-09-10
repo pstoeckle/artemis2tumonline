@@ -25,3 +25,9 @@ __pycache__
 .idea
 .vscode
 test/
+.coverage
+cobertura.xml
+coverage.xml
+flake8.json
+mypy.xml
+report.xml
