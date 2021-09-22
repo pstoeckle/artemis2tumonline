@@ -31,3 +31,4 @@ coverage.xml
 flake8.json
 mypy.xml
 report.xml
+dist/
