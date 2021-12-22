@@ -39,8 +39,8 @@ class BasicTest(TestCase):
         Test normal behavior.
         :return:
         """
-        result = self.runner.invoke(app, ["--tumonline_registration_file", "tests/rsc/test_registration_file.csv",
-                                          "--artemis_export_file", "tests/rsc/test_artemis_export.csv"])
+        result = self.runner.invoke(app, ["--tumonline-registration-file", "tests/rsc/test_registration_file.csv",
+                                          "--artemis-export-file", "tests/rsc/test_artemis_export.csv"])
         self.assertEqual(result.exit_code, 0, msg=result.stdout)
 
         self.assertTrue(self.output_file.exists(), msg="There was no CSV file created.")
@@ -73,8 +73,8 @@ class BasicTest(TestCase):
 
     def test_no_artemis_entry(self) -> None:
         self.assertFalse(self.output_file.exists())
-        result = self.runner.invoke(app, ["--tumonline_registration_file", "tests/rsc/test_missing_id.csv",
-                                          "--artemis_export_file", "tests/rsc/test_artemis_export.csv"])
+        result = self.runner.invoke(app, ["--tumonline-registration-file", "tests/rsc/test_missing_id.csv",
+                                          "--artemis-export-file", "tests/rsc/test_artemis_export.csv"])
         self.assertEqual(result.exit_code, 1)
         self.assertIsInstance(result.exception, StopIteration)
         self.assertFalse(self.output_file.exists(), msg="There was")
