@@ -22,13 +22,13 @@ Usage: artemis2tumonline [OPTIONS]
   TUMOnline file with the grades of the students.
 
 Options:
-  -t, --tumonline_registration_file FILE
+  -t, --tumonline-registration-file FILE
                                   The registration file. You can get this file
                                   from TUMOnline. Usually, this is the same
                                   file you use to register the students for
                                   the exam.
-  -a, --artemis_export_file FILE  The CSV file you can download from Artemis.
-  -o, --output_file FILE          The resulting CSV file. This file contains
+  -a, --artemis-export-file FILE  The CSV file you can download from Artemis.
+  -o, --output-file FILE          The resulting CSV file. This file contains
                                   the necessary information from the TUMOnline
                                   Registration file and the grades from the
                                   Artemis export. You can upload this file to
@@ -45,7 +45,7 @@ Options:
 ### Example 
 
 ```bash
-$ poetry run artemis2tumonline --tumonline_registration_file ./test/Modulpruefung_29072021-0800_IN2178_FA_SecurityEngineering.csv --artemis_export_file test/Final_exam__Security_EngineeringResults.csv
+$ poetry run artemis2tumonline --tumonline-registration-file ./test/Modulpruefung_29072021-0800_IN2178_FA_SecurityEngineering.csv --artemis-export-file test/Final_exam__Security_EngineeringResults.csv
 We load the TUM online file /path/to/cwd/test/Modulpruefung_29072021-0800_IN217 8_FA_SecurityEngineering.csv
 ... and the Artemis file /path/to/cwd/test/Final_exam__Security_EngineeringResults.csv
 ... and write the results in /path/to/cwd/tumonline.csv
