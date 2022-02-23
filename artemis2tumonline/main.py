@@ -4,21 +4,66 @@ Main.
 
 from csv import DictReader, DictWriter
 from dataclasses import asdict
+from logging import INFO, basicConfig, getLogger
 from pathlib import Path
 from typing import List, MutableSet
 
+from artemis2tumonline import __version__
 from artemis2tumonline.model.artemis_entry import ArtemisEntry
-from artemis2tumonline.model.tum_online_entry import (
-    TumOnlineEntry,
-    TumOnlineEntryWithGrade,
+from artemis2tumonline.model.tum_online_entry import (TumOnlineEntry,
+                                                      TumOnlineEntryWithGrade)
+from typer import Exit, Option, Typer, echo, style
+from typer.colors import RED
+
+
+def error_echo(s: str) -> None:
+    """
+
+    :param s:
+    :return:
+    """
+    echo(style(s, fg=RED), err=True)
+
+
+_LOGGER = getLogger(__name__)
+basicConfig(
+    format="%(levelname)s: %(asctime)s: %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=INFO,
+    filename="artemis2tumonline.log",
+    filemode="w",
 )
-from typer import Option, Typer, echo
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        echo(f"artemis2tumonline {__version__}")
+        raise Exit()
+
 
 app = Typer()
 
 
+@app.callback()
+def _call_back(
+    _: bool = Option(
+        None,
+        "--version",
+        is_flag=True,
+        callback=_version_callback,
+        expose_value=False,
+        is_eager=True,
+        help="Version",
+    )
+) -> None:
+    """
+
+    :return:
+    """
+
+
 @app.command()
-def artemis2tumonline(
+def create_final_results(
     tumonline_registration_file: Path = Option(
         "",
         "--tumonline-registration-file",
@@ -65,20 +110,47 @@ def artemis2tumonline(
     entries_with_grades: List[TumOnlineEntryWithGrade] = []
 
     for entry in entries:
-        artemis_entry = next(
-            a
-            for a in artemis_entries
-            if a.matriculation_number == entry.registration_number
-        )
-        artemis_entries.remove(artemis_entry)
-        entries_with_grades.append(
-            TumOnlineEntryWithGrade(
+        _LOGGER.info(f"Handling {entry}")
+        thing_to_add: TumOnlineEntryWithGrade
+        try:
+            artemis_entry = next(
+                a
+                for a in artemis_entries
+                if a.matriculation_number == entry.registration_number
+            )
+            _LOGGER.info(f"... and {artemis_entry}")
+            thing_to_add = TumOnlineEntryWithGrade(
                 grade=(
                     artemis_entry.overall_grade if artemis_entry.submitted else "X-5.0"
                 ),
                 **asdict(entry),
             )
-        )
+        except StopIteration:
+            _LOGGER.info(f"We could not find a matching entry for {entry}")
+            _LOGGER.info("Maybe the matriculation number was interpreted as int ...")
+            try:
+                artemis_entry = next(
+                    a
+                    for a in artemis_entries
+                    if int(a.matriculation_number) == int(entry.registration_number)
+                )
+                _LOGGER.info(f"... and {artemis_entry}")
+            except StopIteration:
+                _LOGGER.error("... and this was also not working...")
+                echo(f"We could not find a matching entry for {entry}")
+                raise Exit(1)
+            entry_dict = asdict(entry)
+            del entry_dict["registration_number"]
+            thing_to_add = TumOnlineEntryWithGrade(
+                grade=(
+                    artemis_entry.overall_grade if artemis_entry.submitted else "X-5.0"
+                ),
+                registration_number=artemis_entry.matriculation_number,
+                **entry_dict,
+            )
+
+        artemis_entries.remove(artemis_entry)
+        entries_with_grades.append(thing_to_add)
 
     if len(artemis_entries) > 0:
         for a in artemis_entries:

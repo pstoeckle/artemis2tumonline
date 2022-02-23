@@ -1,14 +1,8 @@
-
 stages:
 - pre-analysis
-- build
 - test
+- package
 - deploy
-
-include:
-    -   template: Dependency-Scanning.gitlab-ci.yml
-    -   template: License-Scanning.gitlab-ci.yml
-    -   template: Secret-Detection.gitlab-ci.yml
 
 python:quality:
     artifacts:
@@ -38,21 +32,6 @@ python:quality:
         - head -n 1 cobertura.xml
     stage: pre-analysis
 
-python:build:
-    artifacts:
-        paths:
-            - dist
-        expire_in: 3 days
-    cache: *python-cache
-    image: gitlab.lrz.de:5005/i4/software/docker-images/python3.9-poetry
-    needs:
-        - python:quality
-    rules: *python-rules
-    script:
-        - poetry install --no-dev
-        - poetry build
-    stage: build
-
 python:test:
     artifacts:
         reports:
@@ -63,7 +42,7 @@ python:test:
     coverage: '/line-rate="0.([0-9]{1,2})\d*"/'
     image: gitlab.lrz.de:5005/i4/software/docker-images/python3.9-poetry
     needs:
-        - python:build
+        - python:quality
     rules: *python-rules
     script:
         - poetry install
@@ -73,6 +52,21 @@ python:test:
         - cat s.txt
     stage: test
 
+python:package:
+    artifacts:
+        paths:
+            - dist
+        expire_in: 3 days
+    cache: *python-cache
+    image: gitlab.lrz.de:5005/i4/software/docker-images/python3.9-poetry
+    needs:
+        - python:test
+    rules: *python-rules
+    script:
+        - poetry install --no-dev
+        - poetry build
+    stage: package
+
 python:deploy:
     cache: *python-cache
     image: gitlab.lrz.de:5005/i4/software/docker-images/python3.9-poetry
@@ -80,7 +74,7 @@ python:deploy:
     -   if: '$CI_COMMIT_TAG'
     script:
         - poetry config repositories.lrz https://gitlab.lrz.de/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
-        - poetry publish --repository lrz --username ${REGISTRY_USERNAME} --password ${REGISTRY_PASSWORD}
+        - poetry publish --repository lrz --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD
     stage: deploy
     needs:
-        - python:build
+        - python:package
