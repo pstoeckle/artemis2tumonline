@@ -24,9 +24,9 @@ poetry install
 
 ## Usage
 
-```
-poetry run artemis2tumonline --help
-Usage: artemis2tumonline [OPTIONS]
+```bash
+artemis2tumonline create-final-results --help
+Usage: artemis2tumonline create-final-results [OPTIONS]
 
   Reads a TUMOnline registration and a Artemis export file. Creates an
   TUMOnline file with the grades of the students.
