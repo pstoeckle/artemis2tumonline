@@ -10,7 +10,6 @@ python:quality:
             coverage_report:
                 coverage_format: cobertura
                 path: cobertura.xml
-            codequality: flake8.json
             junit: mypy.xml
         expire_in: 10 days
     cache: &python-cache
@@ -29,7 +28,6 @@ python:quality:
         -   if: '$CI_COMMIT_TAG'
     script:
         - poetry install
-        - poetry run flake8 --exit-zero --format gl-codeclimate --output-file flake8.json artemis2tumonline
         - poetry run mypy --cobertura-xml-report=. --junit-xml=mypy.xml --pretty artemis2tumonline
         - head -n 1 cobertura.xml
     stage: pre-analysis
