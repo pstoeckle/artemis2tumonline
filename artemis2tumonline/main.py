@@ -1,18 +1,24 @@
 """
 Main.
 """
-
 from csv import DictReader, DictWriter
 from dataclasses import asdict
+from json import JSONDecodeError, dumps
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
+from shutil import rmtree
 from typing import List, MutableSet
+from zipfile import ZipFile
+
+from requests import Session
 
 from artemis2tumonline import __version__
 from artemis2tumonline.model.artemis_entry import ArtemisEntry
-from artemis2tumonline.model.tum_online_entry import (TumOnlineEntry,
-                                                      TumOnlineEntryWithGrade)
-from typer import Exit, Option, Typer, echo, style
+from artemis2tumonline.model.tum_online_entry import (
+    TumOnlineEntry,
+    TumOnlineEntryWithGrade,
+)
+from typer import Argument, Exit, Option, Typer, echo, style
 from typer.colors import RED
 
 
@@ -177,6 +183,78 @@ def create_final_results(
         writer.writeheader()
         for e in entries_with_grades:
             writer.writerow(asdict(e))
+
+
+@app.command()
+def create_metadata_archive(
+    course_id: int = Argument(None, help="The ID of the course"),
+    user_name: str = Option(None, "--username", "-u", help="The Artemis username"),
+    password: str = Option(None, "--password", "-p", help="The Artemis password"),
+    output_directory: Path = Option(
+        "out", file_okay=False, help="The output directory"
+    ),
+    clean_up: bool = Option(
+        False,
+        "--clean-up",
+        "-c",
+        is_flag=True,
+        help="Deletes the JSONs after we created the ZIP.",
+    ),
+) -> None:
+    """
+    Create a metadata archive of an Artemis course.
+    """
+    output_directory.mkdir(exist_ok=True)
+
+    session = Session()
+    echo("Login into Artemis...")
+    session.get("https://artemis.ase.in.tum.de/")
+    post_result = session.post(
+        "https://artemis.ase.in.tum.de/api/authenticate",
+        json={
+            "username": user_name,
+            "password": password,
+            "rememberMe": True,
+        },
+    )
+    if post_result.status_code != 200:
+        print(post_result.text)
+        raise Exit(1)
+
+    targets = [
+        (f"{n}-exercises.json", f"/api/courses/{course_id}/{n}-exercises/")
+        for n in ("quiz", "programming", "modelling", "text", "file-upload")
+    ] + [("course.json", f"/api/courses/{course_id}")]
+
+    for current_file, current_url in targets:
+        current_url_endpoint = f"https://artemis.ase.in.tum.de" + current_url
+        echo(f"Download JSON from {current_url_endpoint}")
+        res = session.get(
+            current_url_endpoint,
+            headers={"Authorization": post_result.headers["Authorization"]},
+        )
+        if res.status_code != 200:
+            print(res.text)
+            raise Exit(1)
+        if res.text == "":
+            echo(f"No {current_file} because there are no exercises.")
+            continue
+        current_path = output_directory.joinpath(current_file)
+        echo(f"Saving JSON to {current_path}")
+        with current_path.open("w") as f_write:
+            try:
+                f_write.write(dumps(res.json(), indent=4))
+            except JSONDecodeError:
+                echo(f"No {current_file} because there are no exercises.")
+                f_write.write(dumps([]))
+    echo(f"Creating the ZIP in {output_directory}.zip")
+    with ZipFile(f"{output_directory}.zip", "w") as zip_object:
+        for c_fil in output_directory.glob("*.json"):
+            zip_object.write(c_fil, c_fil.name)
+
+    if clean_up:
+        echo(f"Delete {output_directory}")
+        rmtree(output_directory)
 
 
 if __name__ == "__main__":
