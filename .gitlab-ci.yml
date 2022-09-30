@@ -7,8 +7,10 @@ stages:
 python:quality:
     artifacts:
         reports:
+            coverage_report:
+                coverage_format: cobertura
+                path: cobertura.xml
             codequality: flake8.json
-            cobertura: cobertura.xml
             junit: mypy.xml
         expire_in: 10 days
     cache: &python-cache
@@ -35,7 +37,9 @@ python:quality:
 python:test:
     artifacts:
         reports:
-            cobertura: coverage.xml
+            coverage_report:
+                coverage_format: cobertura
+                path: coverage.xml
             junit: report.xml
         expire_in: 10 days
     cache: *python-cache
