@@ -1,17 +1,16 @@
 """
 Main.
 """
-import json
-import pathlib
-import shutil
 from csv import DictReader, DictWriter
 from dataclasses import asdict
+from json import JSONDecodeError, dumps
 from logging import INFO, basicConfig, getLogger
 from pathlib import Path
+from shutil import rmtree
 from typing import List, MutableSet
 from zipfile import ZipFile
 
-import requests
+from requests import Session
 
 from artemis2tumonline import __version__
 from artemis2tumonline.model.artemis_entry import ArtemisEntry
@@ -191,7 +190,7 @@ def create_metadata_archive(
     course_id: int = Argument(None, help="The ID of the course"),
     user_name: str = Option(None, "--username", "-u", help="The Artemis username"),
     password: str = Option(None, "--password", "-p", help="The Artemis password"),
-    output_directory: pathlib.Path = Option(
+    output_directory: Path = Option(
         "out", file_okay=False, help="The output directory"
     ),
     clean_up: bool = Option(
@@ -207,7 +206,7 @@ def create_metadata_archive(
     """
     output_directory.mkdir(exist_ok=True)
 
-    session = requests.Session()
+    session = Session()
     echo("Login into Artemis...")
     session.get("https://artemis.ase.in.tum.de/")
     post_result = session.post(
@@ -244,10 +243,10 @@ def create_metadata_archive(
         echo(f"Saving JSON to {current_path}")
         with current_path.open("w") as f_write:
             try:
-                f_write.write(json.dumps(res.json(), indent=4))
-            except json.JSONDecodeError:
+                f_write.write(dumps(res.json(), indent=4))
+            except JSONDecodeError:
                 echo(f"No {current_file} because there are no exercises.")
-                f_write.write(json.dumps([]))
+                f_write.write(dumps([]))
     echo(f"Creating the ZIP in {output_directory}.zip")
     with ZipFile(f"{output_directory}.zip", "w") as zip_object:
         for c_fil in output_directory.glob("*.json"):
@@ -255,7 +254,7 @@ def create_metadata_archive(
 
     if clean_up:
         echo(f"Delete {output_directory}")
-        shutil.rmtree(output_directory)
+        rmtree(output_directory)
 
 
 if __name__ == "__main__":
