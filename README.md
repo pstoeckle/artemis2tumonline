@@ -11,12 +11,12 @@ This small tool can help you to create the CSV for TUMOnline.
 The easiest way to install the package is to use pip.
 
 ```bash
-pip install artemis2tumonline --extra-index-url https://i4user:A6vMuk6RZ6RUoqtdfmG5@gitlab.lrz.de/api/v4/projects/90035/packages/pypi/simple
+pip install artemis2tumonline
 ```
 **Attention**: On macOS, `pip` is usually the installer of the Python2 instance.
 Please use `pip3` or `pip3.x` in this case.
 
-If you want to work on the software, you can install the dependencies via [poetry](https://python-poetry.org/). 
+If you want to work on the software, you can install the dependencies via [poetry](https://python-poetry.org/).
 
 ```bash
 poetry install
@@ -49,10 +49,10 @@ Options:
                                   Show completion for the specified shell, to
                                   copy it or customize the installation.
   --help                          Show this message and exit.
- 
+
 ```
 
-### Example 
+### Example
 
 ```bash
 $ poetry run artemis2tumonline --tumonline-registration-file ./test/Modulpruefung_29072021-0800_IN2178_FA_SecurityEngineering.csv --artemis-export-file test/Final_exam__Security_EngineeringResults.csv
